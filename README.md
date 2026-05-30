@@ -1,9 +1,20 @@
 # IQuly Agent Examples
 
-> **Status:** Curated examples are being prepared.
+> **Status:** Coming soon — curated examples are being prepared.
 
-This repository will contain **blueprint-shaped** sample packages only (manifest, `AGENT.md`, tools, files)—patterns for versatile agents, not platform internals.
+Sample IQuly agent packages that follow the [agent blueprint](https://github.com/IQuly/iquly-agent-blueprint) shape: `manifest.json`, `AGENT.md`, and optional tools and files.
 
-See also the [agent blueprint](https://github.com/IQuly/iquly-agent-blueprint) when it is published.
+Examples focus on authoring patterns—versatile agents, tool usage, and file layouts—not platform internals.
 
-**Not ready for external use yet.**
+## Related repositories
+
+| Repository | Role | Status |
+|------------|------|--------|
+| [iquly-agent-blueprint](https://github.com/IQuly/iquly-agent-blueprint) | Package template | Coming soon |
+| [iquly-cli](https://github.com/IQuly/iquly-cli) | Init, deploy, chat | Coming soon |
+| [iquly-docs](https://github.com/IQuly/iquly-docs) | Author documentation | Coming soon |
+| **iquly-agent-examples** | This repo — examples | Coming soon |
+
+Organization overview: [IQuly on GitHub](https://github.com/IQuly).
+
+**Not ready for external use yet.** Watch this repository for the first public release.
