@@ -1,0 +1,50 @@
+{
+  "tools": [
+    {
+      "name": "weather_lookup",
+      "command": [
+        "bun",
+        "tools/weather-lookup/run.js"
+      ],
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": ["current", "forecast", "one_line", "moon", "moon_phase", "moonphase"]
+          },
+          "date": {
+            "type": "string"
+          },
+          "units": {
+            "type": "string",
+            "enum": ["auto", "metric", "us", "imperial", "fahrenheit", "metric_mps"]
+          },
+          "lang": {
+            "type": "string"
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "location": { "type": "string" },
+          "mode": { "type": "string" },
+          "units": { "type": "string" },
+          "moonPhase": { "type": "string" },
+          "summary": { "type": "string" },
+          "current": { "type": "object" },
+          "forecast": { "type": "array" }
+        },
+        "required": ["location", "mode", "summary"],
+        "additionalProperties": true
+      },
+      "timeoutMs": 30000
+    }
+  ]
+}

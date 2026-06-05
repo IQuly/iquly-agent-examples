@@ -1,0 +1,6 @@
+{
+  "id": "weather-agent",
+  "name": "Weather Agent",
+  "version": "0.1.6",
+  "description": "Get current weather and short forecasts with no API keys required."
+}
