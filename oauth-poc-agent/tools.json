@@ -1,0 +1,46 @@
+{
+  "tools": [
+    {
+      "name": "oauth_status",
+      "command": ["bun", "tools/oauth-status/run.js"],
+      "description": "Check whether the mock OAuth account is connected.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["connected", "provider"],
+        "properties": {
+          "connected": { "type": "boolean" },
+          "provider": { "type": "string" },
+          "connectedAt": { "type": "string" },
+          "subject": { "type": "string" },
+          "userEmail": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "oauth_connect_card",
+      "command": ["bun", "tools/oauth-connect-card/run.js"],
+      "description": "Render the mock OAuth connect app as a chat artifact.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "required": ["status", "chatRender"],
+        "properties": {
+          "status": { "type": "string" },
+          "message": { "type": "string" },
+          "chatRender": { "type": "object" }
+        },
+        "additionalProperties": true
+      }
+    }
+  ]
+}

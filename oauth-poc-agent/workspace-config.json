@@ -1,0 +1,18 @@
+{
+  "fields": [
+    {
+      "key": "MOCK_OAUTH_CLIENT_ID",
+      "label": "Mock OAuth Client ID",
+      "type": "text",
+      "description": "Optional client id shown in the mock provider screen.",
+      "required": false
+    },
+    {
+      "key": "MOCK_OAUTH_CLIENT_SECRET",
+      "label": "Mock OAuth Client Secret",
+      "type": "secret",
+      "description": "Optional secret used only to prove credentials can be configured.",
+      "required": false
+    }
+  ]
+}

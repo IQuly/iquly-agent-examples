@@ -1,0 +1,11 @@
+{
+  "id": "oauth-poc-agent",
+  "name": "OAuth POC Agent",
+  "version": "0.1.0",
+  "description": "Proves agent app OAuth callback and token state flows with a local mock provider.",
+  "app": {
+    "routes": [
+      { "path": "/*", "access": "private" }
+    ]
+  }
+}
