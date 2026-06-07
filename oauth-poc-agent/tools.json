@@ -25,7 +25,7 @@
     {
       "name": "oauth_connect_card",
       "command": ["bun", "tools/oauth-connect-card/run.js"],
-      "description": "Render the mock OAuth connect app as a chat artifact.",
+      "description": "Render the mock OAuth connect UI as an Agent App.",
       "inputSchema": {
         "type": "object",
         "properties": {},

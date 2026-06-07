@@ -6,13 +6,15 @@ import { handleAgentAppRequest } from "../app/handler.js";
 import { getConnectionStatus } from "../app/oauth-state.js";
 
 let tempRoot;
+const originalFetch = globalThis.fetch;
 
 function contextHeaders(context = {}) {
   const payload = Buffer.from(JSON.stringify({
     userId: "user_oauth_test",
     userEmail: "oauth-test@example.com",
     workspaceId: "workspace_oauth_test",
-    agentAppBaseUrl: "/app",
+    appSessionBaseUrl: "/app/session_test",
+    ingressId: "ingress_test",
     ...context,
   }), "utf8").toString("base64url");
   return { "x-iquly-agent-context": payload };
@@ -21,6 +23,7 @@ function contextHeaders(context = {}) {
 async function runTool(relativePath, input = {}) {
   const proc = Bun.spawn(["bun", relativePath], {
     cwd: path.resolve(import.meta.dir, ".."),
+    env: process.env,
     stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
@@ -42,12 +45,32 @@ beforeEach(async () => {
   tempRoot = await mkdtemp(path.join(os.tmpdir(), "oauth-poc-agent-test-"));
   process.env.STATE_ROOT = tempRoot;
   process.env.PACKAGE_ROOT = path.resolve(import.meta.dir, "..");
+  process.env.IQULY_AGENT_APP_SESSION_URL = "https://control.test/app/session_oauth";
+  process.env.IQULY_RUNTIME_CAPABILITY_TOKEN = "runtime-local";
+  globalThis.fetch = async (input, init) => {
+    const url = new URL(String(input));
+    if (url.pathname === "/capabilities/external-ingress") {
+      const body = JSON.parse(String(init?.body || "{}"));
+      return Response.json({
+        callbackUrl: "https://control.test/ingress/callback",
+        ingressUrl: "https://control.test/ingress/state_test",
+        appSessionUrl: "https://control.test/app/session_oauth",
+        state: "state_test",
+        expiresAt: new Date(Date.now() + 600_000).toISOString(),
+        returnTo: body.returnTo || null,
+      });
+    }
+    return originalFetch(input, init);
+  };
 });
 
 afterEach(async () => {
   await rm(tempRoot, { recursive: true, force: true });
   delete process.env.STATE_ROOT;
   delete process.env.PACKAGE_ROOT;
+  delete process.env.IQULY_AGENT_APP_SESSION_URL;
+  delete process.env.IQULY_RUNTIME_CAPABILITY_TOKEN;
+  globalThis.fetch = originalFetch;
 });
 
 describe("oauth poc agent", () => {
@@ -59,7 +82,7 @@ describe("oauth poc agent", () => {
     const connect = await handleAgentAppRequest(new Request("http://runtime.test/app/connect", { headers }));
     expect(connect.status).toBe(303);
     const authorizeLocation = connect.headers.get("location");
-    expect(authorizeLocation).toContain("/app/mock-provider/authorize");
+    expect(authorizeLocation).toContain("/app/session_test/mock-provider/authorize");
 
     const authorizeUrl = new URL(authorizeLocation, "http://runtime.test");
     const state = authorizeUrl.searchParams.get("state");
@@ -88,23 +111,20 @@ describe("oauth poc agent", () => {
   test("rejects callbacks with invalid state", async () => {
     const response = await handleAgentAppRequest(
       new Request("http://runtime.test/app/callback?code=mock_code&state=missing", {
-        headers: contextHeaders(),
+        headers: contextHeaders({ ingressId: null }),
       }),
     );
     expect(response.status).toBe(400);
     expect(await response.text()).toContain("Invalid or expired OAuth state");
   });
 
-  test("connect card emits an agent app artifact descriptor", async () => {
+  test("connect card emits an Agent App descriptor", async () => {
     const output = await runTool("tools/oauth-connect-card/run.js");
     expect(output).toMatchObject({
       status: "auth_required",
       chatRender: {
-        kind: "artifact",
-        source: {
-          type: "agentApp",
-          path: "/",
-        },
+        kind: "agentApp",
+        url: "https://control.test/app/session_oauth",
       },
     });
   });

@@ -1,9 +1,9 @@
 {
   "id": "oauth-poc-agent",
   "name": "OAuth POC Agent",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Proves agent app OAuth callback and token state flows with a local mock provider.",
-  "image": "iquly-build/oauth-poc-agent:0.1.0",
+  "image": "iquly-build/oauth-poc-agent:0.1.2",
   "app": {
     "routes": [
       { "path": "/*", "access": "private" }

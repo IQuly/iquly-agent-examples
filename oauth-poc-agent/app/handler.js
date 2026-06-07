@@ -1,6 +1,6 @@
 import {
   completeAuthorization,
-  createPendingAuthorization,
+  createPlatformHandoff,
   disconnect,
   getConnectionStatus,
   parseAgentContext,
@@ -63,7 +63,7 @@ function redirect(location) {
 }
 
 function appHref(context, pathname) {
-  const base = String(context.agentAppBaseUrl || "/app").replace(/\/+$/, "");
+  const base = String(context.appSessionBaseUrl || "/app").replace(/\/+$/, "");
   const path = pathname.startsWith("/") ? pathname : `/${pathname}`;
   return `${base}${path}`;
 }
@@ -93,13 +93,13 @@ async function renderHome(request) {
 async function handleConnect(request, url) {
   const context = parseAgentContext(request.headers);
   const returnTo = url.searchParams.get("returnTo") || "/";
-  const { state } = await createPendingAuthorization(context, returnTo);
+  const handoff = await createPlatformHandoff("/callback", returnTo);
   const params = new URLSearchParams({
     response_type: "code",
     client_id: process.env.MOCK_OAUTH_CLIENT_ID || "mock-client",
-    redirect_uri: "/callback",
+    redirect_uri: handoff.callbackUrl,
     scope: "profile.read",
-    state,
+    state: handoff.state,
   });
   return redirect(`${appHref(context, "/mock-provider/authorize")}?${params.toString()}`);
 }
@@ -107,6 +107,7 @@ async function handleConnect(request, url) {
 function renderMockProvider(request, url) {
   const context = parseAgentContext(request.headers);
   const state = url.searchParams.get("state") || "";
+  const redirectUri = url.searchParams.get("redirect_uri") || context.ingressCallbackUrl || "";
   const clientId = url.searchParams.get("client_id") || "mock-client";
   return html(shell(`<section>
     <h1>Mock OAuth Provider</h1>
@@ -117,7 +118,7 @@ function renderMockProvider(request, url) {
       <dt>State</dt><dd>${escapeHtml(state)}</dd>
     </dl>
     <div class="actions">
-      <a href="${escapeHtml(`${appHref(context, "/callback")}?code=mock_code&state=${encodeURIComponent(state)}`)}">Approve</a>
+      <a href="${escapeHtml(`${redirectUri}?code=mock_code&state=${encodeURIComponent(state)}`)}">Approve</a>
       <a class="secondary" href="${escapeHtml(appHref(context, "/"))}">Cancel</a>
     </div>
   </section>`));
@@ -125,9 +126,8 @@ function renderMockProvider(request, url) {
 
 async function handleCallback(request, url) {
   const context = parseAgentContext(request.headers);
-  const state = url.searchParams.get("state") || "";
   const code = url.searchParams.get("code") || "";
-  const result = await completeAuthorization(context, state, code);
+  const result = await completeAuthorization(context, code);
   if (!result.ok) {
     return html(shell(`<section>
       <h1>Connection failed</h1>

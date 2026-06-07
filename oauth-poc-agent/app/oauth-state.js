@@ -37,28 +37,37 @@ export async function writeStore(store) {
   await writeFile(targetPath, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 }
 
-export async function createPendingAuthorization(context, returnTo = "/") {
-  const store = await readStore();
-  const subject = resolveSubject(context);
-  const state = crypto.randomUUID();
-  store.pending[state] = {
-    subject,
-    returnTo,
-    createdAt: new Date().toISOString(),
-  };
-  await writeStore(store);
-  return { state, subject };
+export async function createPlatformHandoff(targetPath, returnTo = null) {
+  const baseUrl = `http://127.0.0.1:${process.env.PORT || "3001"}`;
+  const token = process.env.IQULY_RUNTIME_CAPABILITY_TOKEN || "";
+  const response = await fetch(`${baseUrl}/capabilities/external-ingress`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-iquly-runtime-capability-token": token,
+    },
+    body: JSON.stringify({
+      mode: "handoff",
+      targetPath,
+      returnTo,
+      methods: ["GET"],
+      singleUse: true,
+      expiresInSeconds: 600,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Could not create external ingress: ${response.status}`);
+  }
+  return response.json();
 }
 
-export async function completeAuthorization(context, state, code) {
+export async function completeAuthorization(context, code) {
   const store = await readStore();
-  const pending = store.pending[state];
   const subject = resolveSubject(context);
-  if (!pending || pending.subject !== subject) {
+  if (!context.ingressId) {
     return { ok: false, error: "Invalid or expired OAuth state" };
   }
 
-  delete store.pending[state];
   const now = new Date().toISOString();
   store.tokens[subject] = {
     provider: "mock-oauth",
